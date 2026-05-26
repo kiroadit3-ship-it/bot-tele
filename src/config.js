@@ -24,7 +24,7 @@ const config = {
   pakasirProject: required("PAKASIR_PROJECT"),
   pakasirApiKey: required("PAKASIR_API_KEY"),
   publicBaseUrl: optional("PUBLIC_BASE_URL", ""),
-  port: Number(optional("PORT", "3000")),
+  port: Number(process.env.PORT || "PORT"),
   dbPath: optional("DB_PATH", "./data/store.sqlite"),
   enableStatusPolling: optional("ENABLE_STATUS_POLLING", "true") === "true",
   statusPollingCron: optional("STATUS_POLLING_CRON", "*/1 * * * *"),
