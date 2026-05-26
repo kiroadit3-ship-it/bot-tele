@@ -1,0 +1,26 @@
+{
+  "name": "telegram-store-pakasir-html-edit",
+  "version": "2.0.0",
+  "description": "Telegram digital store bot dengan Pakasir QRIS, admin config, HTML template, placeholders, dan edit-message flow.",
+  "main": "src/index.js",
+  "scripts": {
+    "start": "node src/index.js",
+    "dev": "nodemon src/index.js",
+    "simulate-paid": "node scripts/simulate-paid.js"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "axios": "^1.7.9",
+    "better-sqlite3": "^11.7.0",
+    "dotenv": "^16.4.7",
+    "express": "^4.21.2",
+    "node-cron": "^3.0.3",
+    "qrcode": "^1.5.4",
+    "telegraf": "^4.16.3"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.9"
+  }
+}
