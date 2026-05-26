@@ -8,8 +8,8 @@ async function main() {
 
   app.listen(config.port, "0.0.0.0", () => {
   console.log(`HTTP server running on 0.0.0.0:${config.port}`);
-  console.log(`Health: ${config.publicBaseUrl || "http://localhost:" + config.port}/health`);
-  console.log(`Pakasir webhook: ${(config.publicBaseUrl || "https://domain-railway-anda")}/pakasir/webhook`);
+  console.log(`Health: ${config.publicBaseUrl || "https://bot-tele-production-2c8d.up.railway.app" + config.port}/health`);
+  console.log(`Pakasir webhook: ${(config.publicBaseUrl || "https://bot-tele-production-2c8d.up.railway.app")}/pakasir/webhook`);
 });
 
   startPolling(bot);
