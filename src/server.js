@@ -11,45 +11,101 @@ function createServer(bot) {
   app.use(express.urlencoded({ extended: true }));
 
   app.get("/health", (req, res) => {
-    res.json({ ok: true, service: "telegram-store-pakasir-html-edit" });
+    res.json({
+      ok: true,
+      service: "telegram-store-pakasir",
+      time: new Date().toISOString()
+    });
   });
 
   app.post("/pakasir/webhook", async (req, res) => {
     try {
       const body = req.body || {};
+
       const orderId = String(body.order_id || "");
       const amount = Number(body.amount || 0);
       const project = String(body.project || "");
       const status = String(body.status || "");
       const paymentMethod = String(body.payment_method || "");
 
+      console.log("Pakasir webhook received:", body);
+
       const order = db.prepare("SELECT * FROM orders WHERE id = ?").get(orderId);
-      if (!order) return res.status(404).json({ ok: false, error: "ORDER_NOT_FOUND" });
+
+      if (!order) {
+        return res.status(404).json({
+          ok: false,
+          error: "ORDER_NOT_FOUND"
+        });
+      }
 
       if (project !== config.pakasirProject) {
-        return res.status(400).json({ ok: false, error: "PROJECT_MISMATCH" });
+        return res.status(400).json({
+          ok: false,
+          error: "PROJECT_MISMATCH"
+        });
       }
 
       if (amount !== Number(order.amount)) {
-        return res.status(400).json({ ok: false, error: "AMOUNT_MISMATCH" });
+        return res.status(400).json({
+          ok: false,
+          error: "AMOUNT_MISMATCH"
+        });
       }
 
       if (paymentMethod && paymentMethod !== "qris") {
-        return res.status(400).json({ ok: false, error: "PAYMENT_METHOD_NOT_QRIS" });
+        return res.status(400).json({
+          ok: false,
+          error: "PAYMENT_METHOD_NOT_QRIS"
+        });
       }
 
       if (status !== "completed") {
-        return res.json({ ok: true, ignored: true, status });
+        return res.json({
+          ok: true,
+          ignored: true,
+          status
+        });
       }
 
       const result = completeOrder(orderId);
-      if (!result.ok) return res.status(400).json({ ok: false, error: result.reason });
 
-      if (!result.already) await deliverOrder(bot, result.order, result.stock);
-      return res.json({ ok: true });
+      if (!result.ok) {
+        return res.status(400).json({
+          ok: false,
+          error: result.reason
+        });
+      }
+
+      // Balas Pakasir dulu agar tidak timeout/502
+      res.json({
+        ok: true,
+        delivered_async: !result.already,
+        already_completed: !!result.already
+      });
+
+      // Kirim akses di background, jangan ditunggu oleh webhook
+      if (!result.already) {
+        setImmediate(async () => {
+          try {
+            await deliverOrder(bot, result.order, result.stock);
+            console.log(`Order ${orderId} delivered successfully`);
+          } catch (err) {
+            console.error(`Failed to deliver order ${orderId}:`, err.message);
+          }
+        });
+      }
+
+      return;
     } catch (err) {
       console.error("Webhook error:", err);
-      return res.status(500).json({ ok: false, error: "SERVER_ERROR" });
+
+      if (!res.headersSent) {
+        return res.status(500).json({
+          ok: false,
+          error: "SERVER_ERROR"
+        });
+      }
     }
   });
 
